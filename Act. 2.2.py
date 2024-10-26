@@ -3,7 +3,7 @@ from tkinter import messagebox
 
 class TuringMachine:
     def __init__(self, tape):
-        self.tape = list(tape) + ['□'] 
+        self.tape = list(tape)  
         self.head = 0 
         self.state = 'q0'  
         self.binary_number = ''
@@ -15,44 +15,42 @@ class TuringMachine:
         if self.state == 'q0':
             if symbol == '1':
                 self.binary_number += symbol  
-                self.tape[self.head] = symbol  
                 self.head += 1  
                 self.state = 'q1'
 
         elif self.state == 'q1':
             if symbol == '0':
                 self.binary_number += symbol
-                self.tape[self.head] = symbol
                 self.head += 1
                 self.state = 'q2'
 
         elif self.state == 'q2':
             if symbol == '0' or symbol == '1':
                 self.binary_number += symbol  
-                self.tape[self.head] = symbol
                 self.head += 1
-            elif symbol == '□':
-                self.tape[self.head] = '□'
-                self.head += 1
+            elif symbol == '=':
                 self.state = 'q3'  
 
     def run(self):
-        """Corre la máquina hasta que alcance el estado de aceptación."""
-        while self.state != 'q3':
+        """Corre la máquina hasta que alcance el estado de aceptación o encuentre una cadena inválida."""
+        while self.state != 'q3' and self.head < len(self.tape):
             self.step()
-        return int(self.binary_number, 2)
+        return int(self.binary_number, 2) if self.state == 'q3' else None
 
 def run_machine():
     tape = input_entry.get() 
 
-    if not tape.startswith("10") or any(char not in '01' for char in tape):
-        messagebox.showerror("Error", "Cadena inválida. Asegúrese de que la cadena comience con '10' y solo contenga 0 y 1.")
+    if not tape.startswith("10") or not tape.endswith("=") or any(char not in '01=' for char in tape):
+        messagebox.showerror("Error", "Cadena inválida. Asegúrese de que la cadena comience con '10', termine con '=', y solo contenga 0, 1 o =.")
         return
 
     machine = TuringMachine(tape)
     decimal_result = machine.run()
 
-    result_label.config(text=f"Resultado en decimal: {decimal_result}")
+    if decimal_result is not None:
+        result_label.config(text=f"Resultado en decimal: {decimal_result}")
+    else:
+        messagebox.showerror("Error", "La cadena no fue aceptada por la máquina de Turing.")
 
 window = tk.Tk()
 window.title("Máquina de Turing para decimales")
@@ -65,7 +63,7 @@ input_entry.pack()
 
 run_button = tk.Button(window, text="Ejecutar Máquina", command=run_machine)
 run_button.pack(pady=10)
+
 result_label = tk.Label(window, text="Resultado en decimal: ")
 result_label.pack(pady=10)
-
 window.mainloop()
